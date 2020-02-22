@@ -6,7 +6,6 @@ import tkinter.scrolledtext as ScrolledText
 TODO:
 - spell check
 - config file for settings?
-- add keybinding for close?
 """
 
 class MainApp(tk.Frame):
@@ -29,7 +28,7 @@ class MainApp(tk.Frame):
         self.btn_open = tk.Button(self.fr_buttons, text="Open", command=self.open_file)
         self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=self.save_file)
         self.btn_fullscreen = tk.Button(self.fr_buttons, text="Fullscreen", command=self.toggle_fullscreen)
-        self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.parent.destroy)
+        self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.quit_program)
         self.btn_hide = tk.Button(self.fr_buttons, text="Hide Menu", command=self.close_menu)
         self.collapse_menu = tk.Frame(self.parent)
         self.menu_icon = tk.PhotoImage(file="menu.png")
@@ -49,6 +48,15 @@ class MainApp(tk.Frame):
         self.btn_fullscreen.grid(row=4, column=0, sticky='ew', padx=5, pady=5)
         self.btn_hide.grid(row=5, column=0, sticky='ew', padx=5, pady=5)
         self.btn_close.grid(row=6, column=0, sticky='ew', padx=5, pady=5)
+
+        #Key Bindings
+        self.parent.bind("<Control -q>", lambda event: self.quit_program())
+        self.parent.bind("<Control -s>", lambda event: self.save_file())
+        self.parent.bind("<Control -o>", lambda event: self.open_file())
+        self.parent.bind("<Control -f>", lambda event: self.toggle_fullscreen())
+
+    def quit_program(self):
+        self.parent.destroy()
 
     def open_file(self):
         """Open a file for editing."""
