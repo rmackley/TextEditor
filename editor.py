@@ -5,10 +5,8 @@ import tkinter.scrolledtext as ScrolledText
 """
 TODO:
 - spell check
-- encrypt
 - config file for settings?
 - add keybinding for close?
-- second text area - does this have focus? to check which area to open file in?
 """
 
 class MainApp(tk.Frame):
@@ -24,47 +22,45 @@ class MainApp(tk.Frame):
 
         #Components
         self.txt_area = ScrolledText.ScrolledText()
+        self.txt_area.config(highlightbackground="black", highlightcolor="#C12216", highlightthickness="2")
         self.second_txt_area = ScrolledText.ScrolledText()
-        self.fr_buttons = tk.Frame(self.parent, width="100")
+        self.second_txt_area.config(highlightbackground="black", highlightcolor="#C12216", highlightthickness="2")
+        self.fr_buttons = tk.Frame(self.parent, width="100", background="#DCDCDC")
         self.btn_open = tk.Button(self.fr_buttons, text="Open", command=self.open_file)
         self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=self.save_file)
-        self.btn_change = tk.Button(self.fr_buttons, text="Change color", command=self.change_bg)
         self.btn_fullscreen = tk.Button(self.fr_buttons, text="Fullscreen", command=self.toggle_fullscreen)
         self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.parent.destroy)
         self.btn_hide = tk.Button(self.fr_buttons, text="Hide Menu", command=self.close_menu)
-        self.btn_second_txt = tk.Button(self.fr_buttons, text="Second text area", command=self.open_second_txt)
         self.collapse_menu = tk.Frame(self.parent)
         self.menu_icon = tk.PhotoImage(file="menu.png")
         self.btn_show_menu = tk.Button(self.collapse_menu, image=self.menu_icon, text="Show menu", command=self.open_menu)
         #Background color changing menu
         self.current_color = tk.StringVar(self.parent)
         self.current_color.set("Background color")
-        self.option = tk.OptionMenu(self.fr_buttons, self.current_color, "black", "white", "blue", "red")
+        self.option = tk.OptionMenu(self.fr_buttons, self.current_color, "light", "dark", command=self.change_bg)
 
         #Add components
         self.txt_area.grid(row=0, column=1, sticky='nwse')
+        self.second_txt_area.grid(row=0, column=2, sticky='nsew')
         self.fr_buttons.grid(row=0, column=0, sticky='ns')
         self.btn_open.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         self.btn_save.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
-        self.option.grid(row=2, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_change.grid(row=3, column=0, sticky='ew', padx=5, pady=5)
+        self.option.grid(row=3, column=0, sticky='ew', padx=5, pady=5)
         self.btn_fullscreen.grid(row=4, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_close.grid(row=5, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_hide.grid(row=6, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_second_txt.grid(row=7, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_hide.grid(row=5, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_close.grid(row=6, column=0, sticky='ew', padx=5, pady=5)
 
     def open_file(self):
-        # print(self.parent.focus_get()) # returns '.!frame or .!frame2'
         """Open a file for editing."""
         self.filepath = askopenfilename(
             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
         )
         if not self.filepath:
             return
-        self.txt_area.delete("1.0", tk.END)
+        self.parent.focus_get().delete("1.0", tk.END)
         with open(self.filepath, "r") as input_file:
             text = input_file.read()
-            self.txt_area.insert(tk.END, text)
+            self.parent.focus_get().insert(tk.END, text)
         self.parent.title(f"Text Editor - {self.filepath}")
 
     def save_file(self):
@@ -76,17 +72,21 @@ class MainApp(tk.Frame):
         if not self.filepath:
             return
         with open(self.filepath, "w") as output_file:
-            text = self.txt_area.get("1.0", tk.END)
+            text = self.parent.focus_get().get("1.0", tk.END)
             output_file.write(text)
         self.parent.title(f"Text Editor - {self.filepath}")
 
-    def change_bg(self):
-        self.color = self.current_color.get()
-        if self.color == "white":
-            self.txt_area.config(background=self.color, foreground="black")
-        else:
-            self.txt_area.config(background=self.color, foreground="white")
-            self.fr_buttons.config(background=self.color)
+    def change_bg(self, input):
+        self.color = input
+        if self.color == "light":
+            self.txt_area.config(background="white", foreground="black")
+            self.second_txt_area.config(background="white", foreground="black")
+            self.fr_buttons.config(background="#DCDCDC")
+        elif self.color == "dark":
+            self.txt_area.config(background="black", foreground="white", highlightbackground="#606060")
+            self.second_txt_area.config(background="black", foreground="white", highlightbackground="#606060")
+            self.fr_buttons.config(background="black")
+
 
     def toggle_fullscreen(self):
         if self.parent.attributes()[7] == 1:
@@ -103,10 +103,7 @@ class MainApp(tk.Frame):
         self.collapse_menu.grid_forget()
         self.fr_buttons.grid(row=0, column=0, sticky='ns')
 
-    def open_second_txt(self):
-        self.parent.columnconfigure(1, minsize=500, weight=1)
-        self.parent.columnconfigure(2, minsize=500, weight=1)
-        self.second_txt_area.grid(row=0, column=2, sticky='nsew')
+
 
 if __name__ == "__main__":
     root = tk.Tk()
