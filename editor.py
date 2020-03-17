@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 import tkinter.scrolledtext as ScrolledText
+from functools import partial
 
 """
 TODO:
@@ -25,7 +26,7 @@ class MainApp(tk.Frame):
         self.second_txt_area = ScrolledText.ScrolledText()
         self.second_txt_area.config(highlightbackground="black", highlightcolor="#C12216", highlightthickness="2")
         self.fr_buttons = tk.Frame(self.parent, width="100", background="#DCDCDC")
-        self.btn_open = tk.Button(self.fr_buttons, text="Open", command=self.open_file)
+        self.btn_open = tk.Button(self.fr_buttons, text="Open", command=self.open_check_window)#command=self.open_file)
         self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=self.save_file)
         self.btn_fullscreen = tk.Button(self.fr_buttons, text="Fullscreen", command=self.toggle_fullscreen)
         self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.quit_program)
@@ -37,7 +38,6 @@ class MainApp(tk.Frame):
         self.current_color = tk.StringVar(self.parent)
         self.current_color.set("Background color")
         self.option = tk.OptionMenu(self.fr_buttons, self.current_color, "light", "dark", command=self.change_bg)
-
         #Add components
         self.txt_area.grid(row=0, column=1, sticky='nwse')
         self.second_txt_area.grid(row=0, column=2, sticky='nsew')
@@ -58,17 +58,32 @@ class MainApp(tk.Frame):
     def quit_program(self):
         self.parent.destroy()
 
-    def open_file(self):
+    def open_check_window(self):
+        #Toplevel window to check which window to open in/save from
+        self.open_check = tk.Toplevel()
+        self.open_check.geometry('300x100')
+        self.open_check.title("Which window?")
+        self.msg = tk.Message(self.open_check, width=250, text="Which screen would you like to use?")
+        self.msg.pack(side=tk.TOP, pady=15)
+        self.left_btn = tk.Button(self.open_check, text="Left Window", command=partial(self.open_file, self.txt_area))
+        self.right_btn = tk.Button(self.open_check, text="Right Window", command=partial(self.open_file, self.second_txt_area))
+        self.cancel_btn = tk.Button(self.open_check, text="Cancel", command=self.open_check.destroy)
+        self.left_btn.pack(side=tk.LEFT, padx=20)
+        self.right_btn.pack(side=tk.LEFT)
+        self.cancel_btn.pack(side=tk.LEFT, padx=20)
+        self.open_check.mainloop()
+
+    def open_file(self, use_window):
         """Open a file for editing."""
         self.filepath = askopenfilename(
             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
         )
         if not self.filepath:
             return
-        self.parent.focus_get().delete("1.0", tk.END)
+        use_window.delete("1.0", tk.END)
         with open(self.filepath, "r") as input_file:
             text = input_file.read()
-            self.parent.focus_get().insert(tk.END, text)
+            use_window.insert(tk.END, text)
         self.parent.title(f"Text Editor - {self.filepath}")
 
     def save_file(self):
