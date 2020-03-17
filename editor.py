@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
+from tkinter import colorchooser
 import tkinter.scrolledtext as ScrolledText
 from functools import partial
 
@@ -7,7 +8,7 @@ from functools import partial
 TODO:
 - spell check
 - config file for settings?
-- custom colors
+- add filename to windows
 """
 
 class MainApp(tk.Frame):
@@ -29,31 +30,31 @@ class MainApp(tk.Frame):
         self.fr_buttons = tk.Frame(self.parent, width="100", background="#DCDCDC")
         self.btn_open = tk.Button(self.fr_buttons, text="Open", command=partial(self.open_check_window, self.open_file))
         self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=partial(self.open_check_window, self.save_file))
+        self.btn_color = tk.Button(self.fr_buttons, text="Background Color", command=self.change_bg)
         self.btn_fullscreen = tk.Button(self.fr_buttons, text="Fullscreen", command=self.toggle_fullscreen)
-        self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.quit_program)
         self.btn_hide = tk.Button(self.fr_buttons, text="Hide Menu", command=self.close_menu)
+        self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.quit_program)
+        #Collapsed menu
         self.collapse_menu = tk.Frame(self.parent)
         self.menu_icon = tk.PhotoImage(file="menu.png")
         self.btn_show_menu = tk.Button(self.collapse_menu, image=self.menu_icon, text="Show menu", command=self.open_menu)
-        #Background color changing menu
-        self.current_color = tk.StringVar(self.parent)
-        self.current_color.set("Background color")
-        self.option = tk.OptionMenu(self.fr_buttons, self.current_color, "light", "dark", command=self.change_bg)
+
         #Add components
         self.txt_area.grid(row=0, column=1, sticky='nwse')
         self.second_txt_area.grid(row=0, column=2, sticky='nsew')
         self.fr_buttons.grid(row=0, column=0, sticky='ns')
         self.btn_open.grid(row=0, column=0, sticky='ew', padx=5, pady=5)
         self.btn_save.grid(row=1, column=0, sticky='ew', padx=5, pady=5)
-        self.option.grid(row=3, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_fullscreen.grid(row=4, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_hide.grid(row=5, column=0, sticky='ew', padx=5, pady=5)
-        self.btn_close.grid(row=6, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_color.grid(row=2, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_fullscreen.grid(row=3, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_hide.grid(row=4, column=0, sticky='ew', padx=5, pady=5)
+        self.btn_close.grid(row=5, column=0, sticky='ew', padx=5, pady=5)
+
 
         #Key Bindings
         self.parent.bind("<Control -q>", lambda event: self.quit_program())
-        self.parent.bind("<Control -s>", lambda event: self.save_file())
-        self.parent.bind("<Control -o>", lambda event: self.open_file())
+        self.parent.bind("<Control -s>", lambda event: self.open_check_window(self.save_file))
+        self.parent.bind("<Control -o>", lambda event: self.open_check_window(self.open_file))
         self.parent.bind("<Control -f>", lambda event: self.toggle_fullscreen())
 
     def quit_program(self):
@@ -86,7 +87,7 @@ class MainApp(tk.Frame):
         with open(self.filepath, "r") as input_file:
             text = input_file.read()
             use_window.insert(tk.END, text)
-        self.parent.title(f"Text Editor - {self.filepath}")
+        # self.parent.title(f"Text Editor - {self.filepath}")
 
     def save_file(self, use_window):
         """Save the current file as a new file."""
@@ -100,19 +101,19 @@ class MainApp(tk.Frame):
         with open(self.filepath, "w") as output_file:
             text = use_window.get("1.0", tk.END)
             output_file.write(text)
-        self.parent.title(f"Text Editor - {self.filepath}")
+        # self.parent.title(f"Text Editor - {self.filepath}")
 
-    def change_bg(self, input):
-        self.color = input
-        if self.color == "light":
-            self.txt_area.config(background="white", foreground="black")
-            self.second_txt_area.config(background="white", foreground="black")
-            self.fr_buttons.config(background="#DCDCDC")
-        elif self.color == "dark":
-            self.txt_area.config(background="black", foreground="white", highlightbackground="#606060")
-            self.second_txt_area.config(background="black", foreground="white", highlightbackground="#606060")
-            self.fr_buttons.config(background="black")
-
+    def change_bg(self):
+        (rgb, hex) = colorchooser.askcolor()
+        fg = "black"
+        lum = (rgb[0]*0.299 + rgb[1]*0.587 + rgb[2]*0.114) / 256
+        if lum < .5:
+            fg = "white"
+        else:
+            fg = "black"
+        self.txt_area.config(background=hex, foreground=fg)
+        self.second_txt_area.config(background=hex, foreground=fg)
+        self.fr_buttons.config(background=hex)
 
     def toggle_fullscreen(self):
         if self.parent.attributes()[7] == 1:
