@@ -7,6 +7,7 @@ from functools import partial
 TODO:
 - spell check
 - config file for settings?
+- custom colors
 """
 
 class MainApp(tk.Frame):
@@ -26,8 +27,8 @@ class MainApp(tk.Frame):
         self.second_txt_area = ScrolledText.ScrolledText()
         self.second_txt_area.config(highlightbackground="black", highlightcolor="#C12216", highlightthickness="2")
         self.fr_buttons = tk.Frame(self.parent, width="100", background="#DCDCDC")
-        self.btn_open = tk.Button(self.fr_buttons, text="Open", command=self.open_check_window)#command=self.open_file)
-        self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=self.save_file)
+        self.btn_open = tk.Button(self.fr_buttons, text="Open", command=partial(self.open_check_window, self.open_file))
+        self.btn_save = tk.Button(self.fr_buttons, text="Save As...", command=partial(self.open_check_window, self.save_file))
         self.btn_fullscreen = tk.Button(self.fr_buttons, text="Fullscreen", command=self.toggle_fullscreen)
         self.btn_close = tk.Button(self.fr_buttons, text="Close", command=self.quit_program)
         self.btn_hide = tk.Button(self.fr_buttons, text="Hide Menu", command=self.close_menu)
@@ -58,15 +59,15 @@ class MainApp(tk.Frame):
     def quit_program(self):
         self.parent.destroy()
 
-    def open_check_window(self):
+    def open_check_window(self, win_type):
         #Toplevel window to check which window to open in/save from
         self.open_check = tk.Toplevel()
         self.open_check.geometry('300x100')
         self.open_check.title("Which window?")
         self.msg = tk.Message(self.open_check, width=250, text="Which screen would you like to use?")
         self.msg.pack(side=tk.TOP, pady=15)
-        self.left_btn = tk.Button(self.open_check, text="Left Window", command=partial(self.open_file, self.txt_area))
-        self.right_btn = tk.Button(self.open_check, text="Right Window", command=partial(self.open_file, self.second_txt_area))
+        self.left_btn = tk.Button(self.open_check, text="Left Window", command=partial(win_type, self.txt_area))
+        self.right_btn = tk.Button(self.open_check, text="Right Window", command=partial(win_type, self.second_txt_area))
         self.cancel_btn = tk.Button(self.open_check, text="Cancel", command=self.open_check.destroy)
         self.left_btn.pack(side=tk.LEFT, padx=20)
         self.right_btn.pack(side=tk.LEFT)
@@ -75,6 +76,7 @@ class MainApp(tk.Frame):
 
     def open_file(self, use_window):
         """Open a file for editing."""
+        self.open_check.destroy() #Toplevel window doesn't close itself
         self.filepath = askopenfilename(
             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
         )
@@ -86,8 +88,9 @@ class MainApp(tk.Frame):
             use_window.insert(tk.END, text)
         self.parent.title(f"Text Editor - {self.filepath}")
 
-    def save_file(self):
+    def save_file(self, use_window):
         """Save the current file as a new file."""
+        self.open_check.destroy() #Toplevel window doesn't close itself
         self.filepath = asksaveasfilename(
             defaultextension="txt",
             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
@@ -95,7 +98,7 @@ class MainApp(tk.Frame):
         if not self.filepath:
             return
         with open(self.filepath, "w") as output_file:
-            text = self.parent.focus_get().get("1.0", tk.END)
+            text = use_window.get("1.0", tk.END)
             output_file.write(text)
         self.parent.title(f"Text Editor - {self.filepath}")
 
